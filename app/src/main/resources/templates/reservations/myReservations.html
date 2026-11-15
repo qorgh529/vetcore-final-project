@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+
+<html xmlns:th="https://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'reservations')}">
+
+<body>
+
+  <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+    <h1 class="vc-title" th:text="#{myReservations}"></h1>
+    <a class="vc-btn-primary" th:href="@{/schedules}">
+      <span class="fa fa-calendar-plus-o" aria-hidden="true"></span>
+      <span th:text="#{schedules}"></span>
+    </a>
+  </div>
+
+  <p class="vc-card text-on-surface-variant" id="no-reservations" th:if="${#lists.isEmpty(reservations)}"
+    th:text="#{noReservations}"></p>
+  <div class="flex flex-col gap-4" id="reservations">
+    <div class="vc-card flex flex-wrap items-center gap-6" th:each="r : ${reservations}"
+      th:with="editable=${r.booked and r.schedule.isChangeableAt(now)}">
+      <div class="w-20 h-20 rounded-xl bg-surface-container flex flex-col items-center justify-center shrink-0">
+        <span class="text-label-sm text-primary" th:text="${#temporals.format(r.schedule.treatmentDate, 'yyyy.MM')}"></span>
+        <span class="text-headline-md text-on-surface" th:text="${#temporals.format(r.schedule.treatmentDate, 'dd')}"></span>
+      </div>
+      <div class="flex-1 min-w-[220px]">
+        <div class="flex flex-wrap items-center gap-2">
+          <h2 class="text-title-md text-on-surface" th:text="${r.schedule.treatmentName}"></h2>
+          <span class="reservation-status" th:classappend="'vc-badge-' + ${r.status}"
+            th:text="#{${'reservationStatus.' + r.status}}"></span>
+        </div>
+        <p class="text-body-md text-on-surface-variant mt-1"
+          th:text="${r.schedule.hospital.name + ' · ' + r.schedule.treatmentDate + ' ' + r.schedule.startTime}"></p>
+        <p class="text-body-md text-on-surface mt-2">
+          <span class="fa fa-paw text-primary" aria-hidden="true"></span>
+          <span th:text="${r.petName}"></span>
+          <span class="text-on-surface-variant ml-2" th:if="${r.memo != null and !r.memo.isEmpty()}" th:text="${r.memo}"></span>
+        </p>
+      </div>
+      <div class="flex items-center gap-2" th:if="${editable}">
+        <a class="vc-btn-plain vc-btn-sm" th:href="@{/reservations/{id}/edit(id=${r.id})}" th:text="#{edit}"></a>
+        <form class="m-0" th:action="@{/reservations/{id}/cancel(id=${r.id})}" method="post">
+          <button type="submit" class="vc-btn-danger vc-btn-sm" th:text="#{cancelReservation}"></button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</body>
+
+</html>

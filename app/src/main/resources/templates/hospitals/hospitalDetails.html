@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+
+<html xmlns:th="https://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'hospitals')}">
+
+<body>
+
+  <div class="vc-card mb-8" id="hospital">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <h1 class="vc-title" th:text="${hospital.name}"></h1>
+      <span class="vc-badge bg-secondary-container text-on-secondary-container" th:text="${hospital.region}"></span>
+    </div>
+    <p class="text-body-lg text-on-surface-variant mt-3">
+      <span class="fa fa-map-marker text-primary w-4" aria-hidden="true"></span>
+      <span th:text="${hospital.address}"></span>
+    </p>
+    <p class="text-body-lg text-on-surface-variant mt-1">
+      <span class="fa fa-phone text-primary w-4" aria-hidden="true"></span>
+      <span th:text="${hospital.telephone}"></span>
+    </p>
+  </div>
+
+  <h2 class="text-headline-sm text-on-surface mb-4" th:text="#{schedules}"></h2>
+  <th:block th:replace="~{fragments/scheduleTable :: table (${schedules}, ${now})}" />
+
+  <a class="vc-btn-plain mt-6" th:href="@{/hospitals}" th:text="#{back}"></a>
+
+</body>
+
+</html>

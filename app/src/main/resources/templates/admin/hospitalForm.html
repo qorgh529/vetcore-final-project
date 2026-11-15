@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+
+<html xmlns:th="https://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'admin')}">
+
+<body>
+
+  <div class="max-w-2xl mx-auto">
+    <h1 class="vc-title mb-6" th:text="${hospitalId == null} ? #{admin.newHospital} : #{admin.editHospital}"></h1>
+
+    <form class="vc-card space-y-4" th:object="${hospitalForm}" method="post" id="hospital-form"
+      th:action="${hospitalId == null} ? @{/admin/hospitals} : @{/admin/hospitals/{id}(id=${hospitalId})}">
+      <div>
+        <label class="vc-label" for="name" th:text="#{name}"></label>
+        <input class="vc-input" type="text" th:field="*{name}" maxlength="80" />
+        <span class="vc-field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+      </div>
+      <div>
+        <label class="vc-label" for="region" th:text="#{region}"></label>
+        <input class="vc-input" type="text" th:field="*{region}" maxlength="30" />
+        <span class="vc-field-error" th:if="${#fields.hasErrors('region')}" th:errors="*{region}"></span>
+      </div>
+      <div>
+        <label class="vc-label" for="address" th:text="#{address}"></label>
+        <input class="vc-input" type="text" th:field="*{address}" maxlength="255" />
+        <span class="vc-field-error" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></span>
+      </div>
+      <div>
+        <label class="vc-label" for="telephone" th:text="#{telephone}"></label>
+        <input class="vc-input" type="text" th:field="*{telephone}" maxlength="20" />
+        <span class="vc-field-error" th:if="${#fields.hasErrors('telephone')}" th:errors="*{telephone}"></span>
+      </div>
+      <div class="flex items-center gap-2 pt-2">
+        <button type="submit" class="vc-btn-primary" th:text="#{save}"></button>
+        <a class="vc-btn-plain" th:href="@{/admin/hospitals}" th:text="#{back}"></a>
+      </div>
+    </form>
+  </div>
+
+</body>
+
+</html>

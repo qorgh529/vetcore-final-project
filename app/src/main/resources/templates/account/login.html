@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+
+<html xmlns:th="https://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'login')}">
+
+<body>
+
+  <div class="relative flex flex-col items-center justify-center py-8 overflow-hidden">
+    <div class="absolute -top-32 -left-24 w-96 h-96 rounded-full bg-primary-fixed-dim/20 blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-24 -right-20 w-96 h-96 rounded-full bg-secondary-fixed/25 blur-3xl pointer-events-none"></div>
+
+    <div class="w-full max-w-[460px] bg-surface-container-lowest rounded-xl shadow-xl p-6 sm:p-8 relative z-10">
+      <div class="flex flex-col items-center text-center">
+        <span class="w-12 h-12 rounded-xl bg-primary text-on-primary flex items-center justify-center text-[24px] mb-3">
+          <span class="fa fa-paw" aria-hidden="true"></span>
+        </span>
+        <span class="vc-badge bg-surface-container text-primary mb-2">
+          <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+          <span th:text="#{login.badge}"></span>
+        </span>
+        <h1 class="text-headline-sm text-on-surface" th:text="#{login.title}"></h1>
+        <p class="text-body-md text-on-surface-variant mt-1" th:text="#{login.lead}"></p>
+      </div>
+
+      <div class="vc-alert-error mt-6 mb-0" id="login-error" th:if="${param.error != null}" th:text="#{login.failed}"></div>
+      <div class="vc-alert-info mt-6 mb-0" id="login-out" th:if="${param.logout != null}" th:text="#{login.loggedOut}"></div>
+
+      <form class="mt-6 space-y-4" th:action="@{/login}" method="post" id="login-form">
+        <div>
+          <label class="vc-label" for="username" th:text="#{username}"></label>
+          <div class="relative flex items-center">
+            <span class="fa fa-user absolute left-4 text-outline pointer-events-none" aria-hidden="true"></span>
+            <input class="vc-input pl-11" type="text" id="username" name="username" autocomplete="username" required />
+          </div>
+        </div>
+        <div>
+          <label class="vc-label" for="password" th:text="#{password}"></label>
+          <div class="relative flex items-center">
+            <span class="fa fa-lock absolute left-4 text-outline pointer-events-none" aria-hidden="true"></span>
+            <input class="vc-input pl-11" type="password" id="password" name="password" autocomplete="current-password"
+              required />
+          </div>
+        </div>
+        <div class="pt-2">
+          <button class="vc-btn-primary w-full h-11 text-title-md" type="submit">
+            <span th:text="#{login.submit}"></span>
+            <span class="fa fa-arrow-right" aria-hidden="true"></span>
+          </button>
+        </div>
+      </form>
+
+      <div class="mt-6 bg-surface-container-low -mx-6 sm:-mx-8 -mb-6 sm:-mb-8 px-6 py-4 rounded-b-xl text-center">
+        <span class="text-body-md text-on-surface-variant" th:text="#{login.newHere}"></span>
+        <a class="text-label-md text-primary ml-1" id="login-signup" th:href="@{/signup}" th:text="#{login.signupLink}"></a>
+      </div>
+    </div>
+  </div>
+
+</body>
+
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+
+<html xmlns:th="https://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'home')}">
+
+<body>
+
+  <section class="relative overflow-hidden rounded-2xl bg-surface-container-low px-6 py-12 md:px-12 md:py-16">
+    <div class="absolute -top-32 -left-24 w-96 h-96 rounded-full bg-primary-fixed-dim/20 blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-24 -right-20 w-96 h-96 rounded-full bg-secondary-fixed/25 blur-3xl pointer-events-none"></div>
+    <div class="relative max-w-3xl">
+      <span class="vc-badge bg-surface-container-lowest text-primary mb-4">
+        <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+        <span th:text="#{home.badge}"></span>
+      </span>
+      <h1 class="text-headline-lg md:text-display-lg text-on-surface">
+        <span th:text="#{home.title1}"></span>
+        <span class="text-primary" th:text="#{home.title2}"></span>
+      </h1>
+      <p class="text-body-lg text-on-surface-variant mt-4" th:text="#{home.lead}"></p>
+      <div class="flex flex-wrap gap-3 mt-8">
+        <a class="vc-btn-primary h-12 px-6" id="cta-schedules" th:href="@{/schedules}">
+          <span class="fa fa-calendar-check-o" aria-hidden="true"></span>
+          <span th:text="#{home.cta.schedules}"></span>
+        </a>
+        <a class="vc-btn-tonal h-12 px-6" id="cta-hospitals" th:href="@{/hospitals}">
+          <span class="fa fa-hospital-o" aria-hidden="true"></span>
+          <span th:text="#{home.cta.hospitals}"></span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="mt-12">
+    <p class="text-label-sm text-primary uppercase text-center" th:text="#{home.steps.eyebrow}"></p>
+    <h2 class="text-headline-md text-on-surface text-center mt-1" th:text="#{home.steps.title}"></h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+      <div class="vc-card">
+        <div class="flex items-center justify-between">
+          <span class="text-headline-lg text-primary-fixed-dim" th:text="'01'"></span>
+          <span class="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center">
+            <span class="fa fa-hospital-o" aria-hidden="true"></span>
+          </span>
+        </div>
+        <h3 class="text-title-md text-on-surface mt-4" th:text="#{home.step1.title}"></h3>
+        <p class="text-body-md text-on-surface-variant mt-2" th:text="#{home.step1.body}"></p>
+      </div>
+      <div class="vc-card">
+        <div class="flex items-center justify-between">
+          <span class="text-headline-lg text-primary-fixed-dim" th:text="'02'"></span>
+          <span class="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center">
+            <span class="fa fa-calendar" aria-hidden="true"></span>
+          </span>
+        </div>
+        <h3 class="text-title-md text-on-surface mt-4" th:text="#{home.step2.title}"></h3>
+        <p class="text-body-md text-on-surface-variant mt-2" th:text="#{home.step2.body}"></p>
+      </div>
+      <div class="vc-card">
+        <div class="flex items-center justify-between">
+          <span class="text-headline-lg text-primary-fixed-dim" th:text="'03'"></span>
+          <span class="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center">
+            <span class="fa fa-ticket" aria-hidden="true"></span>
+          </span>
+        </div>
+        <h3 class="text-title-md text-on-surface mt-4" th:text="#{home.step3.title}"></h3>
+        <p class="text-body-md text-on-surface-variant mt-2" th:text="#{home.step3.body}"></p>
+      </div>
+    </div>
+  </section>
+
+</body>
+
+</html>

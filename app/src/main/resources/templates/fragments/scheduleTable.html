@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+
+<html xmlns:th="https://www.thymeleaf.org">
+
+<body>
+  <th:block th:fragment="table (schedules, now)">
+    <p class="vc-card text-on-surface-variant" id="no-schedules" th:if="${#lists.isEmpty(schedules)}"
+      th:text="#{noSchedules}"></p>
+    <div class="vc-card p-0 overflow-x-auto" th:unless="${#lists.isEmpty(schedules)}">
+      <table id="schedules" class="vc-table">
+        <thead>
+          <tr>
+            <th th:text="#{date}"></th>
+            <th th:text="#{time}"></th>
+            <th th:text="#{hospital}"></th>
+            <th th:text="#{treatment}"></th>
+            <th th:text="#{capacity}"></th>
+            <th th:text="#{remaining}"></th>
+            <th th:text="#{bookingOpensAt}"></th>
+            <th th:text="#{status}"></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="s : ${schedules}" th:with="st=${s.statusAt(now)}">
+            <td class="whitespace-nowrap" th:text="${s.treatmentDate}"></td>
+            <td th:text="${s.startTime}"></td>
+            <td><a class="text-primary" th:href="@{/hospitals/{id}(id=${s.hospital.id})}" th:text="${s.hospital.name}"></a></td>
+            <td th:text="${s.treatmentName}"></td>
+            <td th:text="${s.capacity}"></td>
+            <td class="remaining font-bold" th:text="${s.remaining}"></td>
+            <td class="whitespace-nowrap" th:text="${#temporals.format(s.bookingOpensAt, 'yyyy-MM-dd HH:mm')}"></td>
+            <td><span class="booking-status" th:classappend="'vc-badge-' + ${st}" th:text="#{${'bookingStatus.' + st}}"></span></td>
+            <td class="text-right">
+              <a class="vc-btn-primary vc-btn-sm" th:if="${st.name() == 'OPEN'}"
+                th:href="@{/reservations/new(scheduleId=${s.id})}" th:text="#{reserve}"></a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </th:block>
+</body>
+
+</html>

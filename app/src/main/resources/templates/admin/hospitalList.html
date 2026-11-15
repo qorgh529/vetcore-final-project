@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+
+<html xmlns:th="https://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'admin')}">
+
+<body>
+
+  <th:block th:replace="~{fragments/adminTabs :: tabs ('hospitals')}" />
+
+  <div class="flex justify-end mb-4">
+    <a class="vc-btn-primary" id="new-hospital" th:href="@{/admin/hospitals/new}">
+      <span class="fa fa-plus" aria-hidden="true"></span>
+      <span th:text="#{admin.newHospital}"></span>
+    </a>
+  </div>
+
+  <div class="vc-card p-0 overflow-x-auto">
+    <table class="vc-table" id="admin-hospitals">
+      <thead>
+        <tr>
+          <th th:text="#{name}"></th>
+          <th th:text="#{region}"></th>
+          <th th:text="#{address}"></th>
+          <th th:text="#{telephone}"></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:each="h : ${hospitals}">
+          <td th:text="${h.name}"></td>
+          <td th:text="${h.region}"></td>
+          <td th:text="${h.address}"></td>
+          <td th:text="${h.telephone}"></td>
+          <td class="text-right">
+            <a class="vc-btn-plain vc-btn-sm" th:href="@{/admin/hospitals/{id}/edit(id=${h.id})}" th:text="#{edit}"></a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</body>
+
+</html>

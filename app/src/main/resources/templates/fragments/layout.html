@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+
+<html th:fragment="layout (template, menu)" xmlns:th="https://www.thymeleaf.org">
+
+<head>
+
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="shortcut icon" type="image/x-icon" th:href="@{/resources/images/favicon.png}">
+  <title th:text="#{layoutTitle}">VetCore</title>
+  <link th:href="@{/webjars/font-awesome/css/font-awesome.min.css}" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/resources/css/vetcore.css}" />
+  <link rel="stylesheet" th:if="${menu == 'owners' or menu == 'vets' or menu == 'error'}"
+    th:href="@{/resources/css/petclinic.css}" />
+
+</head>
+
+<body class="vc-body">
+
+  <header class="vc sticky top-0 z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+    <div class="max-w-7xl mx-auto px-[1rem] md:px-8 py-[0.75rem] flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+
+      <a class="no-underline flex items-center gap-[0.75rem]" th:href="@{/}">
+        <span class="w-10 h-10 rounded-xl bg-[#00685f] text-on-primary flex items-center justify-center text-[20px]">
+          <span class="fa fa-paw" aria-hidden="true"></span>
+        </span>
+        <span class="flex flex-col">
+          <span class="text-title-md text-[#00685f] leading-none" th:text="#{brand}"></span>
+          <span class="text-label-sm text-outline" th:text="#{brand.tagline}"></span>
+        </span>
+      </a>
+
+      <nav class="flex flex-wrap items-center gap-1" id="main-navbar">
+        <th:block th:fragment="navItem (link, key, glyph, text)">
+          <a th:href="@{__${link}__}" th:class="${key == menu} ? 'vc-nav-link vc-nav-link-active' : 'vc-nav-link'">
+            <span th:class="'fa fa-' + ${glyph}" aria-hidden="true"></span>
+            <span th:text="${text}"></span>
+          </a>
+        </th:block>
+        <th:block th:replace="~{::navItem ('/', 'home', 'home', #{home})}" />
+        <th:block th:replace="~{::navItem ('/hospitals', 'hospitals', 'hospital-o', #{hospitals})}" />
+        <th:block th:replace="~{::navItem ('/schedules', 'schedules', 'calendar', #{schedules})}" />
+        <th:block th:replace="~{::navItem ('/reservations', 'reservations', 'ticket', #{myReservations})}" />
+        <th:block th:replace="~{::navItem ('/vets.html', 'vets', 'user-md', #{vets})}" />
+        <th:block th:if="${currentUserIsStaff}">
+          <th:block th:replace="~{::navItem ('/owners/find', 'owners', 'search', #{findOwners})}" />
+          <th:block th:replace="~{::navItem ('/admin/schedules', 'admin', 'cog', #{admin})}" />
+        </th:block>
+      </nav>
+
+      <div class="flex items-center gap-2">
+        <a class="vc-btn vc-btn-sm text-[#00685f] hover:bg-surface-container" id="nav-login" th:if="${currentUsername == null}"
+          th:href="@{/login}" th:text="#{login}"></a>
+        <a class="vc-btn-primary vc-btn-sm" id="nav-signup" th:if="${currentUsername == null}" th:href="@{/signup}"
+          th:text="#{signup}"></a>
+        <span class="vc-badge bg-surface-container text-on-surface" th:if="${currentUsername != null}">
+          <span class="fa fa-user-circle-o text-[#00685f]" aria-hidden="true"></span>
+          <span id="current-user" th:text="${currentUsername}"></span>
+        </span>
+        <form class="m-0" th:if="${currentUsername != null}" th:action="@{/logout}" method="post" id="logout-form">
+          <button class="vc-btn-plain vc-btn-sm" type="submit" th:text="#{logout}"></button>
+        </form>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-[1rem] md:px-8 py-8">
+    <div class="vc">
+      <div class="vc-alert-ok" id="flash-message" th:if="${messageKey != null}" th:text="#{${messageKey}}"></div>
+      <div class="vc-alert-error" id="flash-error" th:if="${errorKey != null}" th:text="#{${errorKey}}"></div>
+    </div>
+
+    <div
+      th:class="${menu == 'owners' or menu == 'vets' or menu == 'error'} ? 'vc-legacy bg-white rounded-xl p-[1.5rem]' : 'vc'">
+      <th:block th:insert="${template}" />
+    </div>
+  </main>
+
+  <footer class="vc bg-surface-container-low mt-8">
+    <div class="max-w-7xl mx-auto px-[1rem] md:px-8 py-6 flex flex-wrap items-center justify-between gap-[0.75rem]">
+      <span class="text-title-md text-[#00685f]" th:text="#{brand}"></span>
+      <span class="text-body-md text-on-surface-variant" th:text="#{footer.note}"></span>
+    </div>
+  </footer>
+
+</body>
+
+</html>

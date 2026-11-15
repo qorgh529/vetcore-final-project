@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+
+<html xmlns:th="https://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'admin')}">
+
+<body>
+
+  <th:block th:replace="~{fragments/adminTabs :: tabs ('schedules')}" />
+
+  <div class="flex justify-end mb-4">
+    <a class="vc-btn-primary" id="new-schedule" th:href="@{/admin/schedules/new}">
+      <span class="fa fa-plus" aria-hidden="true"></span>
+      <span th:text="#{admin.newSchedule}"></span>
+    </a>
+  </div>
+
+  <div class="vc-card p-0 overflow-x-auto">
+    <table class="vc-table" id="admin-schedules">
+      <thead>
+        <tr>
+          <th th:text="#{date}"></th>
+          <th th:text="#{time}"></th>
+          <th th:text="#{hospital}"></th>
+          <th th:text="#{treatment}"></th>
+          <th th:text="#{admin.reserved}"></th>
+          <th th:text="#{bookingOpensAt}"></th>
+          <th th:text="#{status}"></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:each="s : ${schedules}" th:with="st=${s.statusAt(now)}">
+          <td class="whitespace-nowrap" th:text="${s.treatmentDate}"></td>
+          <td th:text="${s.startTime}"></td>
+          <td th:text="${s.hospital.name}"></td>
+          <td th:text="${s.treatmentName}"></td>
+          <td class="font-bold" th:text="${s.reservedCount + ' / ' + s.capacity}"></td>
+          <td class="whitespace-nowrap" th:text="${#temporals.format(s.bookingOpensAt, 'yyyy-MM-dd HH:mm')}"></td>
+          <td><span th:classappend="'vc-badge-' + ${st}" th:text="#{${'bookingStatus.' + st}}"></span></td>
+          <td class="text-right">
+            <a class="vc-btn-plain vc-btn-sm" th:href="@{/admin/schedules/{id}/edit(id=${s.id})}" th:text="#{edit}"></a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</body>
+
+</html>

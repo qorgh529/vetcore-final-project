@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+
+<html xmlns:th="https://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'hospitals')}">
+
+<body>
+
+  <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+    <div>
+      <h1 class="vc-title" th:text="#{hospitals}"></h1>
+      <p class="text-body-md text-on-surface-variant mt-1" th:text="#{hospitals.lead}"></p>
+    </div>
+    <form th:action="@{/hospitals}" method="get" class="flex items-center gap-2 m-0" id="region-form">
+      <select name="region" class="vc-input h-10 w-40">
+        <option value="" th:text="#{allRegions}"></option>
+        <option th:each="r : ${regions}" th:value="${r}" th:text="${r}" th:selected="${r == selectedRegion}"></option>
+      </select>
+      <button type="submit" class="vc-btn-primary" th:text="#{search}"></button>
+    </form>
+  </div>
+
+  <p class="vc-card text-on-surface-variant" id="no-hospitals" th:if="${#lists.isEmpty(hospitals)}"
+    th:text="#{noHospitals}"></p>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="hospitals">
+    <div class="vc-card flex flex-col gap-3" th:each="h : ${hospitals}">
+      <div class="flex items-start justify-between gap-3">
+        <h2 class="text-title-md text-on-surface" th:text="${h.name}"></h2>
+        <span class="vc-badge bg-secondary-container text-on-secondary-container" th:text="${h.region}"></span>
+      </div>
+      <p class="text-body-md text-on-surface-variant">
+        <span class="fa fa-map-marker text-primary w-4" aria-hidden="true"></span>
+        <span th:text="${h.address}"></span>
+      </p>
+      <p class="text-body-md text-on-surface-variant">
+        <span class="fa fa-phone text-primary w-4" aria-hidden="true"></span>
+        <span th:text="${h.telephone}"></span>
+      </p>
+      <a class="vc-btn-tonal mt-auto" th:href="@{/hospitals/{id}(id=${h.id})}" th:text="#{viewSchedules}"></a>
+    </div>
+  </div>
+
+</body>
+
+</html>

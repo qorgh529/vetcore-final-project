@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+
+<html xmlns:th="https://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'admin')}">
+
+<body>
+
+  <div class="max-w-2xl mx-auto">
+    <h1 class="vc-title mb-6" th:text="${scheduleId == null} ? #{admin.newSchedule} : #{admin.editSchedule}"></h1>
+
+    <form class="vc-card space-y-4" th:object="${scheduleForm}" method="post" id="schedule-form"
+      th:action="${scheduleId == null} ? @{/admin/schedules} : @{/admin/schedules/{id}(id=${scheduleId})}">
+      <div>
+        <label class="vc-label" for="hospitalId" th:text="#{hospital}"></label>
+        <select class="vc-input" th:field="*{hospitalId}">
+          <option th:each="h : ${hospitals}" th:value="${h.id}" th:text="${h.region + ' · ' + h.name}"></option>
+        </select>
+        <span class="vc-field-error" th:if="${#fields.hasErrors('hospitalId')}" th:errors="*{hospitalId}"></span>
+      </div>
+      <div>
+        <label class="vc-label" for="treatmentName" th:text="#{treatment}"></label>
+        <input class="vc-input" type="text" th:field="*{treatmentName}" maxlength="80" />
+        <span class="vc-field-error" th:if="${#fields.hasErrors('treatmentName')}" th:errors="*{treatmentName}"></span>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="vc-label" for="treatmentDate" th:text="#{date}"></label>
+          <input class="vc-input" type="date" th:field="*{treatmentDate}" />
+          <span class="vc-field-error" th:if="${#fields.hasErrors('treatmentDate')}" th:errors="*{treatmentDate}"></span>
+        </div>
+        <div>
+          <label class="vc-label" for="startTime" th:text="#{time}"></label>
+          <input class="vc-input" type="time" th:field="*{startTime}" />
+          <span class="vc-field-error" th:if="${#fields.hasErrors('startTime')}" th:errors="*{startTime}"></span>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="vc-label" for="capacity" th:text="#{capacity}"></label>
+          <input class="vc-input" type="number" min="1" th:field="*{capacity}" />
+          <span class="text-label-md text-on-surface-variant mt-1 block" th:if="${scheduleId != null}"
+            th:text="#{admin.reserved} + ': ' + ${reservedCount}"></span>
+          <span class="vc-field-error" th:if="${#fields.hasErrors('capacity')}" th:errors="*{capacity}"></span>
+        </div>
+        <div>
+          <label class="vc-label" for="bookingOpensAt" th:text="#{bookingOpensAt}"></label>
+          <input class="vc-input" type="datetime-local" th:field="*{bookingOpensAt}" />
+          <span class="vc-field-error" th:if="${#fields.hasErrors('bookingOpensAt')}" th:errors="*{bookingOpensAt}"></span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 pt-2">
+        <button type="submit" class="vc-btn-primary" th:text="#{save}"></button>
+        <a class="vc-btn-plain" th:href="@{/admin/schedules}" th:text="#{back}"></a>
+      </div>
+    </form>
+  </div>
+
+</body>
+
+</html>

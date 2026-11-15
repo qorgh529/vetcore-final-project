@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body.vc-body {
+    margin: 0; background: #faf8ff; color: #131b2e; font-family: theme('fontFamily.sans'); font-size: 14px; line-height: 20px;
+    /* Bootstrap is only loaded on the upstream owner/pet/vet pages; there its primary colour follows ours */
+    --bs-primary: #00685f; --bs-primary-rgb: 0, 104, 95; --bs-link-color: #00685f; --bs-link-color-rgb: 0, 104, 95;
+    --bs-link-hover-color: #008378; --bs-link-hover-color-rgb: 0, 131, 120;
+  }
+  *, ::before, ::after { border-color: #bcc9c6; }
+}
+
+@layer components {
+  .vc-card { @apply bg-surface-container-lowest rounded-xl shadow-sm p-6; }
+  .vc-title { @apply text-headline-md text-on-surface; }
+  .vc-btn { @apply no-underline inline-flex items-center justify-center gap-2 h-10 px-4 rounded-lg text-label-md cursor-pointer transition-colors border-0; }
+  .vc-btn-primary { @apply vc-btn bg-primary text-on-primary shadow-sm hover:bg-primary-container hover:text-on-primary; }
+  .vc-btn-tonal { @apply vc-btn bg-secondary-container text-on-secondary-container hover:bg-primary-fixed hover:text-on-secondary-container; }
+  .vc-btn-plain { @apply vc-btn bg-surface-container text-on-surface hover:bg-surface-container-high hover:text-on-surface; }
+  .vc-btn-danger { @apply vc-btn bg-error-container text-on-error-container hover:bg-error hover:text-on-error; }
+  .vc-btn-sm { @apply h-8 px-3; }
+  .vc-label { @apply block text-label-md text-on-surface mb-1.5; }
+  .vc-input { @apply w-full h-11 px-3.5 bg-surface-container-lowest text-on-surface rounded-lg text-body-md shadow-sm outline-none border border-outline-variant focus:border-primary focus:shadow-md transition-all; }
+  .vc-field-error { @apply block text-label-md text-error mt-1; }
+  .vc-table { @apply w-full text-body-md; border-collapse: collapse; }
+  .vc-table th { @apply text-left text-label-md text-on-surface-variant bg-surface-container-low px-4 py-3 whitespace-nowrap; }
+  .vc-table td { @apply px-4 py-3 text-on-surface border-t border-surface-container; }
+  .vc-badge { @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-label-sm whitespace-nowrap; }
+  .vc-nav-link { @apply no-underline inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-label-md text-on-surface-variant whitespace-nowrap transition-colors hover:text-on-surface hover:bg-surface-container; }
+  .vc-nav-link-active { @apply bg-secondary-container text-on-secondary-container hover:bg-secondary-container hover:text-on-secondary-container; }
+  .vc-alert { @apply rounded-lg px-4 py-3 text-body-md mb-4; }
+  .vc-alert-ok { @apply vc-alert bg-secondary-container text-on-secondary-container; }
+  .vc-alert-error { @apply vc-alert bg-error-container text-on-error-container; }
+  .vc-alert-info { @apply vc-alert bg-surface-container text-on-surface; }
+}
+
+/* Upstream Bootstrap pages (owners, pets, vets) inside the new layout */
+.vc-legacy .btn-primary { background-color: #00685f; border-color: #00685f; color: #fff; }
+.vc-legacy .btn-primary:hover { background-color: #008378; border-color: #008378; }
+.vc-legacy h2 { font-size: 24px; line-height: 32px; font-weight: 600; margin: 0 0 16px; }
+
+/* Status badges. The class name is built from the status at runtime, so these sit outside
+   the layers: Tailwind would otherwise drop them as unused. */
+.vc-badge-OPEN, .vc-badge-BOOKED { @apply vc-badge bg-secondary-container text-on-secondary-container; }
+.vc-badge-FULL { @apply vc-badge bg-error-container text-on-error-container; }
+.vc-badge-NOT_OPEN { @apply vc-badge bg-tertiary-fixed text-on-tertiary-fixed; }
+.vc-badge-ENDED, .vc-badge-CANCELLED { @apply vc-badge bg-surface-container-high text-on-surface-variant; }

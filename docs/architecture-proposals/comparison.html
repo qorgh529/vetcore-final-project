@@ -1,0 +1,85 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>멀티클라우드 아키텍처 3개 안 비교</title>
+<style>
+body{margin:0;padding:20px;background:var(--background,#fff);color:var(--foreground,#171717);font-family:var(--font-sans,system-ui,sans-serif);font-size:14px;line-height:1.6}
+main{max-width:1000px;margin:auto}
+h1{font-size:21px;margin:0 0 4px}h2{font-size:16px;margin:30px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border,#e5e5e5)}h3{font-size:14px;margin:0 0 6px}
+p{margin:6px 0}.m{color:var(--muted-foreground,#666)}
+.call{background:var(--card,#fafafa);color:var(--card-foreground,#171717);border:1px solid var(--border,#e5e5e5);border-left:4px solid var(--primary,#2563eb);border-radius:var(--radius,8px);padding:12px 16px;margin:14px 0}
+.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:720px;font-size:13px}th,td{border:1px solid var(--border,#e5e5e5);padding:7px 9px;text-align:left;vertical-align:top}thead th{background:var(--muted,#f5f5f5);color:var(--foreground,#171717)}tbody th{font-weight:600;white-space:nowrap}
+.good{font-weight:600}.bad{color:var(--destructive,#b91c1c);font-weight:600}
+.dia{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0}.top,.bot{grid-column:1/-1;text-align:center;border:1px solid var(--border,#ddd);border-radius:var(--radius,8px);padding:7px;background:var(--muted,#f5f5f5)}
+.cloud{border:1px solid var(--border,#ddd);border-radius:var(--radius,8px);padding:10px}.cloud b{display:block;margin-bottom:6px}.t{border:1px solid var(--border,#ddd);border-radius:6px;padding:5px 8px;margin:5px 0;background:var(--card,#fafafa);color:var(--card-foreground,#171717)}.link{grid-column:1/-1;text-align:center;font-size:13px;color:var(--muted-foreground,#666)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px}.card{border:1px solid var(--border,#ddd);border-radius:var(--radius,8px);padding:12px;background:var(--card,#fafafa);color:var(--card-foreground,#171717)}.card ul,ol{margin:4px 0;padding-left:18px}.lab{font-weight:600;margin-top:8px}
+code{font-family:var(--font-mono,monospace);font-size:12px}
+</style></head><body><main>
+<h1>AWS + GCP 3Tier 고가용성 아키텍처: 3개 안 비교</h1>
+<p class="m">2026-11-06 · 원문: <code>docs/architecture-proposals/{claude,codex,antigravity}.md</code></p>
+
+<div class="call"><b>결론: Claude 안을 뼈대로, Codex의 대체 경로와 Antigravity의 스키마 관리를 더하는 조합을 추천합니다.</b><br>
+세 안의 기본 구조는 같습니다. 가장 큰 차이는 <b>AWS가 죽었을 때 운영 도구가 살아남는지</b>와 <b>전환을 얼마나 자동화하는지</b>입니다.<br>
+<span class="m">참고: 이 비교는 Claude인 제가 작성했으므로 Claude 안에 유리하게 기울 수 있습니다. 아래 판단 근거를 직접 확인해 주세요.</span></div>
+
+<h2>1. 세 안이 공통으로 고른 구조</h2>
+<div class="dia">
+<div class="top">사용자 → DNS 전환 → 평상시 AWS 100%, 장애 시 GCP</div>
+<div class="cloud"><b>AWS 서울: Active</b><div class="t">Web: ALB + 프런트엔드</div><div class="t">App: EKS MSA, 다중 AZ</div><div class="t">Data: RDS PostgreSQL Multi-AZ (쓰기 지점)</div></div>
+<div class="cloud"><b>GCP 서울: Warm Standby</b><div class="t">Web: Cloud Load Balancer + 프런트엔드</div><div class="t">App: GKE MSA, 최소 replica</div><div class="t">Data: Cloud SQL PostgreSQL (승격 전까지 복제 대상)</div></div>
+<div class="link">↑ RDS → Cloud SQL 비동기 복제, 사설 IPsec VPN 경유 ↑</div>
+<div class="bot">GitHub Actions(CI) · ArgoCD(CD) · Terraform + Ansible · Prometheus + Grafana</div>
+</div>
+<p>셋 다 액티브-액티브, 서비스 메시, 분산 DB를 뺐고, <b>DB 승격은 자동화하지 않습니다.</b> 스플릿 브레인으로 중복 판매가 생길 위험 때문입니다.</p>
+<p class="m">이 일치를 독립적인 검증으로 보지는 마세요. 세 워커 모두 제가 쓴 같은 지시문("과설계는 감점")을 받았고, 4인 팀·서울-서울 리전·예약 서비스라는 가정까지 같습니다. 서울-서울 구성은 도시 단위 재해를 막지 못합니다.</p>
+
+<h2>2. 달라지는 결정</h2>
+<div class="scroll"><table><thead><tr><th>항목</th><th>Claude</th><th>Codex</th><th>Antigravity</th></tr></thead><tbody>
+<tr><th>핵심 성격</th><td>전환 절차를 정교하게</td><td>가장 단순하게</td><td>시연 효과와 저비용</td></tr>
+<tr><th>가정 기간</th><td>8주</td><td>6주</td><td>6주</td></tr>
+<tr><th>AWS 장애 시 DNS</th><td>Route 53 자동</td><td>담당자가 수동 변경</td><td>Cloudflare 자동</td></tr>
+<tr><th>장애 중 서비스</th><td>읽기 자동 복구(목표 3분), 쓰기는 승인 후(15분)</td><td>승인·승격까지 전면 중단(목표 60분)</td><td>읽기 전환 후 한 줄 명령으로 승격(전체 목표 3분)</td></tr>
+<tr><th>DB 복제</th><td>Google DMS, 실패 시 네이티브 논리 복제</td><td>Cloud SQL 외부 복제, 실패 시 백업 복원</td><td>네이티브 논리 복제</td></tr>
+<tr><th>MSA</th><td>4개, 앱에 읽기 전용 모드 구현</td><td>3개</td><td>3개 + 클러스터 내 Redis</td></tr>
+<tr><th>배포 전략</th><td>Argo Rollouts(replica 비율 캐너리)</td><td>롤링 + Git revert</td><td>Argo Rollouts(트래픽 비율 캐너리)</td></tr>
+<tr><th>Ansible 역할</th><td>ArgoCD 부트스트랩, DB 준비, failover/failback</td><td>관리 호스트 설치, 복구 점검만</td><td>Bastion 설정, 노드 튜닝, failover</td></tr>
+<tr><th>상시 월 비용 (추정)</th><td>약 $1,130 (터널 4개)</td><td>약 $701</td><td>약 $560</td></tr>
+<tr><th>절감 운영 시 (추정)</th><td>약 $360/월, 8주 합계 $750~1,000</td><td>별도 금액 없음</td><td>약 $317/월</td></tr>
+</tbody></table></div>
+<p class="m">비용은 사양이 달라 단순 비교할 수 없고, 서울 단가도 대부분 미검증입니다. RTO/RPO는 모두 실측이 아닌 목표치입니다.</p>
+
+<h2>3. AWS 전체 장애 때 남는 운영 도구</h2>
+<div class="scroll"><table><thead><tr><th>도구</th><th>Claude</th><th>Codex</th><th>Antigravity</th></tr></thead><tbody>
+<tr><th>ArgoCD</th><td class="good">클러스터별 독립, GCP 생존</td><td class="good">클러스터별 독립, GCP 생존</td><td class="bad">EKS 허브, 함께 중단</td></tr>
+<tr><th>Grafana</th><td class="good">GKE에 배치, 생존</td><td class="good">GCP에 최소 구성, 생존</td><td class="bad">EKS, 함께 중단</td></tr>
+<tr><th>알람</th><td class="good">양쪽 Alertmanager + GCP 외부 프로브</td><td class="good">GCP Alertmanager + 외부 프로브</td><td class="bad">EKS Alertmanager, 함께 중단</td></tr>
+<tr><th>Terraform state</th><td class="good">S3 + GCS 분리</td><td class="good">S3 + GCS 분리</td><td class="bad">S3 단일</td></tr>
+<tr><th>AWS 복구 시 낡은 DB로 자동 복귀 방지</th><td class="good">이중 차단 설계 (짧은 틈은 인정)</td><td class="good">수동 DNS라 자동 복귀 없음</td><td class="bad">언급 없음</td></tr>
+</tbody></table></div>
+
+<h2>4. 안별 평가</h2>
+<div class="cards">
+<div class="card"><h3>Claude: 2단계 전환</h3><div class="lab">강점</div><ul><li>읽기는 자동, 쓰기는 승인 후 복구해 자동화 경계의 근거가 분명함</li><li>복제 지연을 직접 재는 상황판, 복귀 차단 등 실패 지점을 가장 많이 다룸</li><li>검증한 사실과 미검증 항목을 부록으로 구분함</li></ul><div class="lab">약점</div><ul><li>구현량과 비용이 가장 큼</li><li>DMS는 마이그레이션 도구라 DR 장기 사용은 비권장 용도임</li><li>Route 53 자체는 AWS 의존임</li><li>매일 <code>terraform destroy</code>는 재구성 시간 부담이 큼 (제 판단)</li><li>시연 스크립트의 replica 0과 보안 그룹 변경은 ArgoCD와 컨트롤러가 되돌릴 수 있어 리허설로 확인 필요 (제 판단)</li></ul></div>
+<div class="card"><h3>Codex: 최소 구성</h3><div class="lab">강점</div><ul><li>6주 안에 끝낼 가능성이 가장 높음</li><li>복제 실패 시 백업 복원으로 바꾸는 대체 경로가 명확함</li><li>과장 없이 한계를 설명함</li></ul><div class="lab">약점</div><ul><li>전환이 전부 수동이라 RTO가 길고 시연 효과가 약함</li><li>"AWS 쓰기 차단을 확인 못 하면 GCP 쓰기를 열지 않는다"는 규칙은 AWS가 완전히 죽으면 전환을 막을 수 있어 예외 절차가 필요함</li><li>Ansible 비중이 작아 평가 항목이라면 불리함</li><li>VPN과 LB 등을 합쳐 $100인 항목은 낮아 보임</li></ul></div>
+<div class="card"><h3>Antigravity: 시연 중심</h3><div class="lab">강점</div><ul><li>월 비용이 가장 낮고 절감 방법이 구체적임</li><li>Cloudflare로 DNS의 AWS 의존을 없앰</li><li>Flyway 스키마 관리와 15분 시연 타임라인이 실용적임</li></ul><div class="lab">약점</div><ul><li class="bad">시연 중 EKS 노드를 정지하면, EKS에 있는 Grafana와 Alertmanager도 함께 멈춰 핵심 화면이 사라짐</li><li>"무중단"을 내세우지만 수동 승격이 있어 실제로는 무중단이 아님</li><li>승격 후 시퀀스 보정과 Redis 좌석 선점 유실을 다루지 않음</li><li>Spot 노드에 의존해 전환 순간의 위험이 큼</li></ul></div>
+</div>
+
+<h2>5. 제가 추가로 확인한 문제</h2>
+<div class="scroll"><table><thead><tr><th>대상</th><th>내용</th><th>확인 수준</th></tr></thead><tbody>
+<tr><th>Antigravity</th><td>메인 Mermaid 다이어그램이 파싱 오류로 렌더링되지 않음 (다이어그램 코드 59번째 줄의 괄호에서 첫 오류). 나머지 5개 다이어그램은 통과</td><td>mermaid 11 파서로 직접 실행</td></tr>
+<tr><th>Antigravity</th><td>EKS v1.31은 표준 지원이 2025-11 종료, 연장 지원도 2026-11-25~26 종료. 연장 지원 요금은 $0.60/h</td><td>AWS 문서 + 제3자 추적 사이트, 공식 일정 재확인 권장</td></tr>
+<tr><th>Antigravity</th><td>요약의 "월 200달러 미만"이 자체 표($317, $560)와 다름. 절감 열은 합산하면 $322인데 $317로 적힘</td><td>보고서 내 계산</td></tr>
+<tr><th>Antigravity</th><td>Cloudflare 5초 헬스체크를 $5 요금으로 가정. 2021년 요금표 사본에서는 5초 주기가 Enterprise 항목. <b>현재 요금과 주기 제한은 확인하지 못함</b></td><td>미확정, 대시보드 확인 필요</td></tr>
+<tr><th>Antigravity</th><td>S3 잠금에 DynamoDB 사용. Terraform 문서상 해당 인자는 deprecated, <code>use_lockfile</code>로 대체</td><td>Claude 보고서가 인용한 HashiCorp 문서</td></tr>
+<tr><th>Antigravity</th><td>Bitnami Redis 차트 사용. 2025년 Bitnami 무료 카탈로그가 축소·이전되어 그대로 동작하지 않을 수 있음</td><td>2차 자료, Redis 개별 확인은 못 함</td></tr>
+<tr><th>Antigravity</th><td>다이어그램의 Prometheus Agent 표기와 Thanos Sidecar를 함께 쓰면 동작하지 않을 가능성이 큼</td><td>제 지식 기반, 문서로 확인 못 함</td></tr>
+<tr><th>Antigravity, Codex</th><td>VPN 비용이 낮게 잡힘. 2터널 최소 구성도 약 $110 (AWS 연결 $36.5 + GCP 터널 2 × $36.5, 비서울 단가 기준)</td><td>Claude 부록 단가로 계산</td></tr>
+<tr><th>공통</th><td>논리 복제는 시퀀스 값을 따라가지 않음. 승격 전 보정 또는 UUID PK 필요 (Claude는 UUID, Codex는 보정, Antigravity는 언급 없음)</td><td>PostgreSQL 공식 문서</td></tr>
+</tbody></table></div>
+
+<h2>6. 추천 조합</h2>
+<ol>
+<li><b>Claude 안에서:</b> 2단계 전환, 클러스터별 독립 ArgoCD, GKE의 Grafana, 복제 지연 상황판, 읽기 전용 모드, S3 + GCS state 분리, Ansible failover 플레이북.</li>
+<li><b>Codex 안에서:</b> 2주차 복제 PoC 실패 시 백업 복원으로 바꾸는 기준, 양쪽 레지스트리 동일 digest 게시.</li>
+<li><b>Antigravity 안에서:</b> Flyway로 양쪽 스키마 관리, 15분 시연 타임라인, 단일 NAT 등 개발기 절감. Cloudflare는 요금과 주기를 확인한 뒤 Route 53 약점의 대안으로 검토.</li>
+<li><b>새로 수정:</b> 데모 주간 전까지 VPN은 2터널로 유지하고, 매일 전체 삭제 대신 노드 축소와 부분 삭제를 먼저 씁니다. 일정이 밀리면 Rollouts부터 롤링 + Git revert로 줄입니다.</li>
+</ol>
+<div class="call"><b>첫 검증 과제 (2주차까지):</b> RDS → VPN → Cloud SQL 복제와 승격을 실제로 돌려 봅니다. Claude와 Codex가 이 구간을 가장 큰 위험으로 꼽았고, Antigravity도 관련 구성을 미검증으로 남겼습니다. 여기서 복제 방식을 확정합니다.</div>
+</main></body></html>

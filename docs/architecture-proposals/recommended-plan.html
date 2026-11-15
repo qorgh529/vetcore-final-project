@@ -1,0 +1,94 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>수정 추천안: 4주, 5명, 09:20~21:00 운영</title>
+<style>
+body{margin:0;padding:20px;background:var(--background,#fff);color:var(--foreground,#171717);font-family:var(--font-sans,system-ui,sans-serif);font-size:14px;line-height:1.6}
+main{max-width:1000px;margin:auto}h1{font-size:21px;margin:0 0 4px}h2{font-size:16px;margin:30px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border,#e5e5e5)}h3{font-size:14px;margin:0 0 6px}p{margin:6px 0}.m{color:var(--muted-foreground,#666)}
+.call{background:var(--card,#fafafa);color:var(--card-foreground,#171717);border:1px solid var(--border,#e5e5e5);border-left:4px solid var(--primary,#2563eb);border-radius:var(--radius,8px);padding:12px 16px;margin:14px 0}
+.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:680px;font-size:13px}th,td{border:1px solid var(--border,#e5e5e5);padding:7px 9px;text-align:left;vertical-align:top}thead th{background:var(--muted,#f5f5f5);color:var(--foreground,#171717)}tbody th{font-weight:600;white-space:nowrap}
+.dia{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0}.top,.bot{grid-column:1/-1;text-align:center;border:1px solid var(--border,#ddd);border-radius:var(--radius,8px);padding:7px;background:var(--muted,#f5f5f5)}.cloud{border:1px solid var(--border,#ddd);border-radius:var(--radius,8px);padding:10px}.cloud b{display:block;margin-bottom:6px}.t{border:1px solid var(--border,#ddd);border-radius:6px;padding:5px 8px;margin:5px 0;background:var(--card,#fafafa);color:var(--card-foreground,#171717)}.link{grid-column:1/-1;text-align:center;font-size:13px;color:var(--muted-foreground,#666)}
+.day{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin:8px 0}.st{border:1px solid var(--border,#ddd);border-radius:var(--radius,8px);padding:9px;background:var(--card,#fafafa);color:var(--card-foreground,#171717)}.st b{display:block}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px}.card{border:1px solid var(--border,#ddd);border-radius:var(--radius,8px);padding:12px;background:var(--card,#fafafa);color:var(--card-foreground,#171717)}.pick{border:2px solid var(--primary,#2563eb)}ul,ol{margin:4px 0;padding-left:18px}code{font-family:var(--font-mono,monospace);font-size:12px}
+</style></head><body><main>
+<h1>수정 추천안: 4주, 5명, 09:20~21:00 운영</h1>
+<p class="m">2026-11-06 작성 · 개발 2026-11-20(금) ~ 12-17(목), 발표 12-21(월)</p>
+
+<div class="call"><b>추천을 바꿉니다: 뼈대는 Claude 안에서 Codex 안으로 옮기고, Claude 안의 자동 읽기 전환만 더합니다.</b><br>
+개발 기간이 4주(평일 20일)라 8주 기준인 Claude 안은 그대로 하기 어렵습니다. 예산 제한이 없어져 비용 절감용 복잡성은 빼도 됩니다. 이제 설계를 좌우하는 제약은 <b>시간</b>과 <b>매일 내렸다 올리는 운영</b>입니다.</div>
+
+<h2>1. 조건 변화로 달라지는 점</h2>
+<div class="scroll"><table><thead><tr><th>조건</th><th>설계 결정</th></tr></thead><tbody>
+<tr><th>개발 4주</th><td>Argo Rollouts, Thanos, Loki, Redis, Cloudflare, 자동 복귀를 뺍니다. 배포는 롤링 + Git revert로 합니다.</td></tr>
+<tr><th>예산 제한 없음</th><td>개발용과 시연용 구성을 나누지 않습니다. 처음부터 RDS Multi-AZ, VPN 4터널, 리전형 GKE를 씁니다. 구성이 하나라 시연 직전 전환 사고가 줄어듭니다.</td></tr>
+<tr><th>21:00 종료</th><td>기동·종료 자동화가 1주차 최우선 산출물입니다. Prometheus 데이터는 매일 사라지므로 30일 SLO 대신 <b>당일 세션 지표</b>로 바꾸고, 실측 결과는 따로 보관합니다.</td></tr>
+<tr><th>5명</th><td>인프라 4명, 앱 1명으로 시작하고 앱 담당이 병목이 되면 3주차부터 지원합니다.</td></tr>
+<tr><th>평가 기준 없음</th><td>Ansible은 ArgoCD 부트스트랩, DB 준비, failover에만 씁니다. 쓰기 전환은 계속 사람이 승인합니다.</td></tr>
+</tbody></table></div>
+
+<h2>2. 최종 구조</h2>
+<div class="dia">
+<div class="top">Route 53 Failover: 평상시 AWS, AWS 비정상 시 GCP로 <b>자동</b> 전환 (읽기 전용 상태로)</div>
+<div class="cloud"><b>AWS 서울: Active</b><div class="t">Web: ALB + 프런트엔드</div><div class="t">App: EKS, 2 AZ, 서비스 4개</div><div class="t">Data: RDS PostgreSQL Multi-AZ</div><div class="t">ArgoCD · Prometheus · Alertmanager</div></div>
+<div class="cloud"><b>GCP: Warm Standby</b><div class="t">Web: Cloud Load Balancer + 프런트엔드</div><div class="t">App: 리전형 GKE, 서비스 4개, 읽기 전용 모드</div><div class="t">Data: Cloud SQL (승인 후 승격)</div><div class="t">ArgoCD · Prometheus · Alertmanager · <b>Grafana</b></div></div>
+<div class="link">↑ RDS → Cloud SQL 비동기 복제 + Grafana 조회, HA VPN 4터널 ↑</div>
+<div class="bot">GitHub Actions(CI, 이미지를 ECR과 Artifact Registry에 모두 게시) · 클러스터별 독립 ArgoCD · Terraform state는 S3 + GCS 분리</div>
+</div>
+
+<h2>3. 하루 운영 주기 <span class="m">(소요 시간은 미측정 추정)</span></h2>
+<div class="day">
+<div class="st"><b>09:20 기동 시작</b>당번이 버튼 실행: 클러스터, NAT, VPN 생성, DB 시작</div>
+<div class="st"><b>~10:20 준비 완료</b>ArgoCD가 Git에서 앱과 모니터링 복원, 복제 재개 확인</div>
+<div class="st"><b>~20:20 작업</b>앱 개발은 Docker Compose나 kind로 로컬에서도 진행</div>
+<div class="st"><b>20:20 종료 시작</b>Ingress 삭제 → 복제 지연 0 확인 → DB 중지 → 클러스터, NAT, VPN 삭제</div>
+<div class="st"><b>21:00 전 완료</b>잔여 리소스 자동 점검 후 팀 채널에 보고</div>
+</div>
+<div class="scroll"><table><thead><tr><th>주의할 점</th><th>대응</th></tr></thead><tbody>
+<tr><th>GitHub 예약 실행은 늦거나 누락될 수 있음</th><td>기동은 당번의 수동 실행으로 합니다. 종료는 수동 실행을 기본으로, 외부 스케줄러를 안전장치로 둡니다. 예약 실행에만 의존하면 21:00 종료를 지키지 못할 수 있습니다.</td></tr>
+<tr><th>Kubernetes가 만든 LB와 ENI가 VPC 삭제를 막음</th><td>Terraform 삭제 전에 Ingress부터 지웁니다. 이 때문에 VPC는 삭제하지 않고 유지합니다.</td></tr>
+<tr><th>RDS 시작은 수 분에서 수 시간까지 걸릴 수 있음 (AWS 문서)</th><td>RDS 7일 제한은 매일 시작하므로 문제없습니다. 시작 시간을 매일 기록하고, 발표일에는 일찍 기동합니다.</td></tr>
+<tr><th>ALB 주소가 매일 바뀜</th><td>Route 53 레코드와 헬스체크 대상 갱신을 기동 절차에 넣습니다. GCP는 고정 IP를 유지합니다.</td></tr>
+</tbody></table></div>
+<p><b>21:00 이후에도 남겨야 하는 소액 리소스:</b> state 버킷, 이미지 레지스트리, Route 53 영역, 인증서, 시크릿, GCP 고정 IP, 중지된 DB의 디스크입니다. 이것까지 지우면 매일 복구할 수 없습니다.</p>
+<p><b>비용 추정:</b> 전체 구성이 시간당 약 $1.55라는 기존 추정(미검증)에 하루 11시간 40분을 적용하면, 11-20~12-21 평일만 약 $400, 매일 가동 시 약 $580입니다. 여기에 보관비가 더 듭니다.</p>
+<div class="call"><b>최대 미검증 위험: 매일 중지해도 복제가 유지되는가.</b> Google DMS는 중지한 작업의 재개를 지원하지만, 양쪽 DB 중지와 VPN 삭제까지 겹친 경우는 확인하지 못했습니다. Restart는 대상 데이터를 지울 수 있어 복구 수단으로 쓰면 안 됩니다. 11-26까지 아래 순서로 결정합니다.<ol><li>DMS 작업을 중지·재개하며 매일 유지</li><li>매일 아침 Cloud SQL과 DMS를 새로 구성 (데이터가 작으면 현실적)</li><li>복제를 포기하고 백업 복원 방식으로 전환 (RPO가 크게 늘어남)</li></ol></div>
+
+<h2>4. 독창적인 MSA 주제</h2>
+<div class="cards">
+<div class="card pick"><h3>추천 A. 재난 안부·대피소 서비스 "안부"(가칭)</h3>
+<p><b>왜 맞는가:</b> "재난 때 가장 먼저 필요한 서비스는 장애 중에도 살아 있어야 한다"는 이야기가 멀티클라우드의 이유를 설명합니다. 읽기 전용 모드도 "대피소 정보는 계속 보인다"로 자연스럽게 이어집니다.</p>
+<p><b>시연:</b> 청중이 QR로 접속해 모의 대피자로 체크인합니다. AWS를 끊으면 청중의 휴대폰에서 전환을 직접 보게 됩니다.</p></div>
+<div class="card"><h3>B. 타임캡슐 우체국</h3><p>미래의 나에게 쓴 편지를 봉인하고 지정 시각에 엽니다. "편지는 잃어버리면 안 된다"가 RPO 설명과 잘 맞습니다. 다만 개봉 스케줄러가 두 사이트에서 중복 실행되지 않게 해야 해서 까다롭습니다.</p></div>
+<div class="card"><h3>C. 장애 룰렛</h3><p>청중이 어떤 장애를 일으킬지 투표하면 시스템이 버티는 모습을 보여 줍니다. 시연은 가장 재미있지만 실제 서비스 느낌이 약하고, 장애 주입 권한의 보안 설계가 필요합니다.</p></div>
+</div>
+<div class="scroll" style="margin-top:10px"><table><thead><tr><th>A안 서비스</th><th>책임</th><th>GCP 읽기 전용 동작</th></tr></thead><tbody>
+<tr><th><code>shelter</code></th><td>대피소 위치, 수용 인원, 혼잡도 조회</td><td>정상 동작</td></tr>
+<tr><th><code>checkin</code></th><td>입소 처리, 정원 초과 방지 (<code>FOR UPDATE</code>, 재시도 안전한 UUID)</td><td>503, 안내 표시</td></tr>
+<tr><th><code>safety-board</code></th><td>가족 코드로 안부 메시지 남기기·확인</td><td>기존 메시지만 조회</td></tr>
+<tr><th><code>alert-sim</code></th><td>모의 재난 문자 발송, 부하 발생</td><td>과거 문자만 조회</td></tr>
+</tbody></table></div>
+<ul>
+<li><b>데이터:</b> 행정안전부 민방위대피시설 API에 시설명, 좌표, 최대 수용인원이 있습니다. 미리 받아 DB에 넣어 시연 중 외부 의존을 없앱니다. 좌표계가 EPSG:5174라 변환이 필요합니다.</li>
+<li><b>로그인 없음:</b> 가족 코드와 기기 토큰만 씁니다. 개인정보를 받지 않고, JWT 키 동기화 문제도 사라집니다.</li>
+<li><b>유실 측정 (시간 여유 시):</b> 휴대폰이 체크인 영수증을 보관하게 하면 전환 후 DB와 대조해 실제 유실 건수를 RPO로 보여 줄 수 있습니다.</li>
+<li><b>리전:</b> A안이라면 같은 도시 재해에 취약한 서울-서울이 주제와 충돌합니다. GCP를 도쿄(<code>asia-northeast1</code>)로 옮기는 것을 권합니다. 코드 변경은 거의 없고, 복제 지연은 1주차 PoC에서 측정합니다.</li>
+<li><b>명시 사항:</b> 시연용이며 실제 재난 대응에 쓰면 안 된다고 화면에 표시합니다.</li>
+</ul>
+
+<h2>5. 일정과 역할</h2>
+<div class="scroll"><table><thead><tr><th>기간</th><th>목표</th><th>완료 기준</th></tr></thead><tbody>
+<tr><th>~11-19 준비</th><td>주제 확정, 계정·할당량·도메인, 역할, CIDR</td><td>11-20에 바로 Terraform 시작 가능</td></tr>
+<tr><th>1주 11-20~26</th><td>네트워크, VPN, DB, <b>복제 PoC</b>, 앱 뼈대, CI</td><td>RDS 변경이 Cloud SQL에 보이고, 중지 후에도 유지 방식 결정</td></tr>
+<tr><th>2주 11-27~12-03</th><td>EKS, GKE, ArgoCD, 기동·종료 버튼, 서비스 4개 초안</td><td>버튼 하나로 양쪽 재생성, AWS에서 체크인 성공</td></tr>
+<tr><th>3주 12-04~10</th><td>모니터링, 상황판, 읽기 전용 모드, Route 53, failover 플레이북. 12-07 스키마 동결</td><td>12-10까지 첫 전체 failover 성공</td></tr>
+<tr><th>4주 12-11~17</th><td>RTO/RPO 실측 3회 이상, 결함 수정, 런북. 12-16 코드 동결</td><td>전원이 한 번씩 failover 실행</td></tr>
+<tr><th>12-18~21</th><td>리허설, 녹화본, 발표</td><td>리허설 3회, 백업 영상 확보</td></tr>
+</tbody></table></div>
+<p class="m">12-07 스키마 동결은 DDL이 자동 복제되지 않기 때문입니다.</p>
+<div class="scroll" style="margin-top:8px"><table><thead><tr><th>담당</th><th>역할</th></tr></thead><tbody>
+<tr><th>A</th><td>AWS Terraform: VPC, EKS, RDS, Route 53</td></tr>
+<tr><th>B</th><td>GCP Terraform, VPN, DB 복제</td></tr>
+<tr><th>C</th><td>GitHub Actions, ArgoCD, 기동·종료 자동화</td></tr>
+<tr><th>D</th><td>Prometheus, Grafana, 알람, Ansible failover, k6</td></tr>
+<tr><th>E</th><td>서비스 4개와 프런트엔드 (3주차부터 C, D 지원)</td></tr>
+</tbody></table></div>
+<p><b>더 밀리면 줄이는 순서:</b> <code>alert-sim</code> → 유실 측정 → VPN을 통한 Grafana 교차 조회 → DB 복제를 백업 복원으로 대체. <b>끝까지 지킬 것:</b> 읽기 자동 전환, 승인 후 쓰기 복구, 상황판.</p>
+<p><b>발표 강점:</b> 매일 전체 환경을 코드로 다시 만드는 운영 자체가 복구 훈련입니다. 재구성 횟수와 소요 시간을 기록해 근거로 제시할 수 있습니다.</p>
+</main></body></html>
